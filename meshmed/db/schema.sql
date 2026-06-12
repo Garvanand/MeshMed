@@ -192,3 +192,18 @@ CREATE TABLE meshmed.drug_interactions_kb (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_interaction_lookup ON meshmed.drug_interactions_kb(drug_a, drug_b);
+
+-- =================================================================================
+-- AUDIT LOG (HIPAA / DISHA ALIGNED)
+-- =================================================================================
+CREATE TABLE meshmed.health_data_access_logs (
+    log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES meshmed.users(user_id) ON DELETE CASCADE,
+    accessed_by VARCHAR(100) NOT NULL,
+    access_type VARCHAR(50) NOT NULL,
+    data_category VARCHAR(100) NOT NULL,
+    purpose TEXT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45)
+);
+CREATE INDEX idx_audit_log_user ON meshmed.health_data_access_logs(user_id);

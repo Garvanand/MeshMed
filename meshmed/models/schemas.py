@@ -237,3 +237,17 @@ class ClaimPackage(BaseModel):
     filled_form: ClaimForm
     documents: list[str]                # Document IDs compiled
     completeness: CompletenessReport
+
+# ================================================================
+# AGENT OS COMPLIANCE STRUCTURES
+# ================================================================
+
+class HealthDataAccessLog(BaseModel):
+    log_id: str
+    user_id: str
+    accessed_by: str          # "user", "agentOS:ghostcfo", "agentOS:riteofway"
+    access_type: str          # "read", "write", "share", "export"
+    data_category: str        # "medications", "lab_results", "diagnoses"
+    purpose: str              # why was this accessed?
+    timestamp: datetime
+    ip_address: Optional[str]

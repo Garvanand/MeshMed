@@ -1,0 +1,46 @@
+# Add this to the root AgentOS docker-compose.yml
+
+services:
+  # ... existing AgentOS services ...
+
+  meshmed:
+    build: ./Day04_MeshMed
+    container_name: agentos_meshmed
+    ports:
+      - "8003:8000" # Internal AgentOS port for MeshMed API
+    depends_on:
+      - postgres
+      - redis
+      - chromadb
+    environment:
+      - DATABASE_URL=postgresql://agentos:password@postgres:5432/agentos_shared
+      - REDIS_URL=redis://redis:6379/1
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+      - PHI_ENCRYPTION_KEY=${PHI_ENCRYPTION_KEY} # CRITICAL: Ensure injected
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - meshmed_documents:/tmp/meshmed_documents
+    restart: unless-stopped
+
+  meshmed_worker:
+    build: ./Day04_MeshMed
+    container_name: agentos_meshmed_worker
+    command: celery -A meshmed.tasks worker --concurrency=2 -l info
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      # Duplicate environment variables from meshmed service
+      - DATABASE_URL=postgresql://agentos:password@postgres:5432/agentos_shared
+      - REDIS_URL=redis://redis:6379/1
+      - PHI_ENCRYPTION_KEY=${PHI_ENCRYPTION_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - meshmed_documents:/tmp/meshmed_documents
+    restart: unless-stopped
+
+volumes:
+  meshmed_documents: # Secure storage for PDFs before OCR processing
